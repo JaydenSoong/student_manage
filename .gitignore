@@ -1,0 +1,46 @@
+# Python Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyCharm specific files
+.idea/
+*.iml
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+.idea/
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Log files
+*.log
+
+# macOS specific files
+.DS_Store
+
+# Windows specific files
+Thumbs.db
+
+# Eclipse specific files
+.project
+.settings/
+
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Other Python environment files
+pip-log.txt
+pip-delete-this-directory.txt

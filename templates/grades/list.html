@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>班经列表</title>
+</head>
+<body>
+<h1>班经列表</h1>
+{% for grade in grades %}
+班级名称:{{grade.grade_name}}-班级编号:{{grade.grade_number}}
+{% endfor %}
+</body>
+</html>

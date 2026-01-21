@@ -42,7 +42,7 @@
                         <ul>
                             <li>
                                 <i class="bi bi-person-video2"></i>
-                                <a href="">班级管理</a>
+                                <a href="{% url 'grade_list' %}">班级管理</a>
                             </li>
                             <li>
                                 <i class="bi bi-incognito"></i>
@@ -68,7 +68,7 @@
                     </div>
                 </div>
             </div>
-            {% block content%}
+            {% block content %}
             {% endblock %}
         </div>
     </div>

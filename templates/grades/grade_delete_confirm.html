@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+<div class="right col-9">
+    <div class="form_container">
+        <h1>确定删除？</h1>
+        <p>你确定要删除【 {{ grade.grade_name }} 】 吗？ 此操作不可撤销。</p>
+        <form method="post">
+            {% csrf_token %}
+            <!-- <div class="row mb-3"> -->
+                <button type="submit" class="btn btn-danger">确认删除</button>
+                <a href="{% url 'grades_list' %}">
+                    <button type="button" class="btn btn-primary">取消</button>
+                </a>
+            <!-- </div> -->
+        </form>
+    </div>
+</div>
+{% endblock %}

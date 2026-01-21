@@ -1,8 +1,10 @@
 # 导入ListView
-from django.views.generic import ListView
+from django.views.generic import ListView, CreateView, UpdateView
+from django.db.models import Q
+from django.urls import reverse_lazy
 # 导入ListView使用时所需要提供的模型
 from .models import Grade
-from django.db.models import Q
+from .forms import GradeForm
 
 # Create your views here.
 class GradeListView(ListView):
@@ -34,3 +36,16 @@ class GradeListView(ListView):
 
         # 如果存在参数，则进行过滤，否则返回所有数据（父类方法）
         return queryset
+
+class GradeCreateView(CreateView):
+    model =  Grade
+    template_name = 'grades/form.html'
+    form_class = GradeForm
+    # 注意这里使用 reverse_lazy 或 reverse 函数，而不是直接使用字符串
+    success_url = reverse_lazy('grade_list')
+
+class GradeUpdateView(UpdateView):
+    model =  Grade
+    template_name = 'grades/form.html'
+    form_class = GradeForm
+    success_url = reverse_lazy('grade_list')

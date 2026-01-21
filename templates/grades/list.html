@@ -16,7 +16,7 @@
                 </div>
                 <div class="col-auto">|</div>
                 <div class="col-auto">
-                    <a href="">
+                    <a href="{% url 'grade_create' %}">
                         <button type="button" class="btn btn-success btn-sm">新增</button>
                     </a>
                 </div>
@@ -42,7 +42,7 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ grade.grade_name }}</td>
                     <td>{{ grade.grade_number }}</td>
-                    <td><a href="" class="link-success">编辑</a><a href="" class="link-warning">删除</a></td>
+                    <td><a href="{% url 'grade_update' grade.id %}" class="link-success">编辑</a><a href="" class="link-warning">删除</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

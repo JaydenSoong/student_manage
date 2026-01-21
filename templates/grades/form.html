@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/form.css' %}">
+<div class="right col-9">
+<div class="form_container">
+    <h1>
+        {% if object %}
+        编辑班级
+        {% else %}
+        新增班级
+        {% endif %}
+    </h1>
+    <form method="post">
+        {% csrf_token %}
+        <!-- 由于后端使用了表单模型，它会直接返回一个表单对象给前端 -->
+        {% for field in form %}
+        <div class="row mb-3">
+            <label for="{{ field.id_for_label }}" class="col-sm-2 col-form-label">{{ field.label }}</label>
+            <div class="col-sm-10">
+                {{ field }}
+            </div>
+            <ul>
+                {% for error in field.errors %}
+                <li class="text-danger">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
+</div>
+</div>
+{% block scripts %}
+<script>
+    const inputEles = document.getElementsByClassName('col-sm-10')
+    for (let i = 0; i < inputEles.length; i++) {
+        inputEles[i].getElementsByTagName('input')[0].classList.add('form-control')
+    }
+</script>
+{% endblock %}
+
+{% endblock %}

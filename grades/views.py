@@ -1,5 +1,6 @@
-from django.shortcuts import render
+# 导入ListView
 from django.views.generic import ListView
+# 导入ListView使用时所需要提供的模型
 from .models import Grade
 
 # Create your views here.

@@ -1,0 +1,56 @@
+/* Light Theme Variables */
+:root {
+  --background-color: #f8f9fa;
+  --container-bg-color: #ffffff;
+  --text-color: #212529;
+  --button-bg-color: #0d6efd;
+  --button-text-color: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  --background-color: #1e1e2f;
+  --container-bg-color: #2c2c3e;
+  --text-color: #e4e4e7;
+  --button-bg-color: #6c63ff;
+  --button-text-color: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Smooth Transitions for Theme Changes */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.login-container {
+  background-color: var(--container-bg-color);
+  color: var(--text-color);
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+button {
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: none;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.theme-toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+}

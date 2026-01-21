@@ -1,0 +1,23 @@
+.form_container {
+    /* margin-top: 2em; */
+    margin: 2em auto 0 auto;
+    width: 80%;
+}
+
+h1 {
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+.form_container input {
+    width: 70%;
+}
+
+.form_container .row {
+    /* text-align: center; */
+    margin-left: calc(30%/2);
+}
+
+.btn-danter {
+    width: auto !important;
+}

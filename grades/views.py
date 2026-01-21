@@ -1,5 +1,5 @@
-# 导入ListView
-from django.views.generic import ListView, CreateView, UpdateView
+# 导入ListView 等
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.urls import reverse_lazy
 # 导入ListView使用时所需要提供的模型
@@ -18,7 +18,7 @@ class GradeListView(ListView):
     context_object_name = 'grades'
 
     # 定义每页显示的数据条数
-    paginate_by = 5
+    paginate_by = 9
 
     # 重写父类方法
     def get_queryset(self):
@@ -48,4 +48,9 @@ class GradeUpdateView(UpdateView):
     model =  Grade
     template_name = 'grades/form.html'
     form_class = GradeForm
+    success_url = reverse_lazy('grade_list')
+
+class GradeDeleteView(DeleteView):
+    model = Grade
+    template_name = 'grades/delete_confirm.html'
     success_url = reverse_lazy('grade_list')

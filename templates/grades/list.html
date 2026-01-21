@@ -42,7 +42,10 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ grade.grade_name }}</td>
                     <td>{{ grade.grade_number }}</td>
-                    <td><a href="{% url 'grade_update' grade.id %}" class="link-success">编辑</a><a href="" class="link-warning">删除</a></td>
+                    <td>
+                        <a href="{% url 'grade_update' grade.id %}" class="link-success">编辑</a>
+                        <a href="{% url 'grade_delete' grade.id %}" class="link-warning">删除</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

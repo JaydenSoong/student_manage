@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.conf.global_settings import X_FRAME_OPTIONS
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -69,6 +71,11 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            # 注册自定义模板过滤器
+            'libraries': {
+                'custom_filters': 'templatetags.custom_filters',
+                'url_utils': 'templatetags.url_utils',
+            },
         },
     },
 ]
@@ -137,3 +144,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # 这是可选的，用于配置 CKEditor 的上传路径
 # CKEDITOR_UPLOAD_PATH = 'uploads/'
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'

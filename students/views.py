@@ -1,8 +1,9 @@
 from django.http import JsonResponse
-from django.views.generic import ListView, CreateView
+from django.views.generic import ListView, CreateView, UpdateView
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 
 from .models import Student
 from .forms import StudentForm
@@ -50,6 +51,41 @@ class StudentCreateView(CreateView):
         return JsonResponse({
             'status': 'success',
             'message': '添加成功'
+        }, status=200)
+
+    # 表单验证失败后的处理逻辑
+    def form_invalid(self, form):
+        # 获取表单返回的错误信息
+        errors = form.errors.as_json()
+        return JsonResponse({
+            'status': 'error',
+            'message': errors
+        }, status=400)
+
+class StudentUpdateView(UpdateView):
+    model = Student
+    template_name = 'students/form.html'
+    form_class = StudentForm
+    # success_url = reverse_lazy('student_list')
+
+    # 表单验证成功后的处理逻辑
+    def form_valid(self, form):
+        # 从表单中获取学生对象实例
+        student = form.save(commit=False)
+        # 检查是否修改了学号，因为学号是关联了user表的username的
+        if 'student_number' in form.changed_data:
+            student.user.username = form.cleaned_data['student_number']
+            student.user.password = make_password(form.cleaned_data['student_number'][-6:])
+            # 保存更改后的用户
+            student.user.save()
+
+        # 保存学生对象
+        student.save()
+
+        # 返回 JSON 响应
+        return JsonResponse({
+            'status': 'success',
+            'message': '修改成功'
         }, status=200)
 
     # 表单验证失败后的处理逻辑

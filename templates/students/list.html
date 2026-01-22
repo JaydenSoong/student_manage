@@ -74,7 +74,7 @@
                     <td>{{ student.contact_number }}</td>
                     <td>
                         <a href="{% url 'student_update' student.id %}" class="link-success edit">编辑</a>
-                        <a href="" class="link-warning del">删除</a>
+                        <a href="{% url 'student_delete' student.id %}" class="link-warning del">删除</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -175,10 +175,10 @@
                         }
                     }).then(response => response.json()).then(data => {
                         if (data.status === 'success') {
-                            Swal.fire('Deleted!', data.messages, 'success')
+                            Swal.fire('Deleted!', data.message, 'success')
                             window.location.reload()
                         }
-                        Swal.fire('Error!', data.messages, 'error')
+                        Swal.fire('Error!', data.message, 'error')
                     })
                 }
             })

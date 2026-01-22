@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.views.generic import ListView, CreateView, UpdateView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
@@ -96,3 +96,24 @@ class StudentUpdateView(UpdateView):
             'status': 'error',
             'message': errors
         }, status=400)
+
+class StudentDeleteView(UpdateView):
+    success_url = reverse_lazy('student_list')
+    model =  Student
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        try:
+            # 删除关联的 user 表中的数据
+            self.object.user.delete()
+            # 删除 student 表中的数据
+            self.object.delete()
+            return JsonResponse({
+                'status': 'success',
+                'message': '删除成功'
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': '删除失败' + str(e)
+            }, status=500)

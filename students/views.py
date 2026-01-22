@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.generic import ListView, CreateView
 from django.db.models import Q
 from django.urls import reverse_lazy
+from django.contrib.auth.models import User
 
 from .models import Student
 from .forms import StudentForm
@@ -30,21 +31,32 @@ class StudentCreateView(CreateView):
     form_class = StudentForm
     success_url = reverse_lazy('student_list')
 
+    # 表单验证成功后的处理逻辑
     def form_valid(self, form):
-        # # 获取用户输入的性别
-        # sex = form.cleaned_data['sex']
-        # # 获取用户输入的出生日期
-        # birthday = form.cleaned_data['birthday']
-        # # 获取用户输入的联系方式
-        # contact_number = form.cleaned_data['contact_number']
-        # # 获取用户输入的班级
-        # grade = form.cleaned_data['grade']
-        # # 获取用户输入的班级编号
-        # grade_number = grade.grade_number
-        # # 获取用户输入的班级名称
+        # student 表和 user 表是一对一关联，所以接收学号字段，来作为 user 的 username
+        student_number = form.cleaned_data['student_number']
 
+        # 检查是user表中否已存在该用户
+        users = User.objects.filter(username=student_number)
+        if users.exists():
+            user = users.first()
+        else:
+            # 如果不存在该用户，则创建该用户
+            user = User.objects.create_user(username=student_number, password=student_number[-6:])
+        # 写入到student表中
+        form.instance.user = user
+        form.save()
 
         return JsonResponse({
             'status': 'success',
             'message': '添加成功'
-        })
+        }, status=200)
+
+    # 表单验证失败后的处理逻辑
+    def form_invalid(self, form):
+        # 获取表单返回的错误信息
+        errors = form.errors.as_json()
+        return JsonResponse({
+            'status': 'error',
+            'message': errors
+        }, status=400)

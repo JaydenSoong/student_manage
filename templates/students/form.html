@@ -81,7 +81,7 @@
                         })
                     } else {
                         // 解析嵌套的 JSON 字符串
-                        const errors = JSON.parse(data.messages)
+                        const errors = JSON.parse(data.message)
                         // 构造错误信息的文本
                         let errorMessage = '<ul>';
                         for (const field in errors) {

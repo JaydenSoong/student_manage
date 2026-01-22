@@ -214,7 +214,7 @@
                     checkboxes.forEach(checkbox => {
                         formData.append('student_ids', checkbox.value)
                     })
-                    fetch("", {
+                    fetch("{% url 'student_bulk_delete' %}", {
                         method: 'POST',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
@@ -225,10 +225,10 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                Swal.fire('Deleted!', data.messages, 'success')
+                                Swal.fire('Deleted!', data.message, 'success')
                                 window.location.reload()
                             }
-                            Swal.fire('Error!', data.messages, 'error')
+                            Swal.fire('Error!', data.message, 'error')
                         })
                 }
             })

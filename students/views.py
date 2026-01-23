@@ -1,3 +1,6 @@
+import datetime
+from pathlib import Path
+
 from django.http import JsonResponse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
@@ -7,12 +10,15 @@ from django.contrib.auth.hashers import make_password
 
 from .models import Student
 from .forms import StudentForm
+from grades.models import Grade
+from utils.handle_excel import ReadExcel
 
 # Create your views here.
 class StudentListView(ListView):
     model = Student
     template_name = 'students/list.html'
     context_object_name = 'students'
+    paginate_by = 9
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -146,3 +152,101 @@ class StudentBulkDeleteView(DeleteView):
                 'status': 'error',
                 'message': '删除失败' + str(e)
             }, status=500)
+
+"""
+定义一个方法完成批量导入学生信息的功能
+"""
+def import_student(request):
+    # 导入学生的功能使用POST请求
+    if request.method == 'POST':
+        file = request.FILES.get('excel_file')
+        # 判断文件是否上传
+        if not file:
+            return JsonResponse({
+                'status': 'error',
+                'message': '请上传Excel文件'
+            }, status=400)
+    # 判断文件类型是否是Excel文件
+    ext = Path(file.name).suffix
+    if ext.lower() != '.xlsx':
+        return JsonResponse({
+            'status': 'error',
+            'message': '文件类型错误，请上传.xlsx格式的文件'
+        }, status=400)
+
+    # 使用之前定义的ReadExcel类读取Excel文件
+    read_excel = ReadExcel(file)
+    data = read_excel.get_data()
+    if data[0] != ['班级', '姓名', '学号', '性别', '出生日期', '联系电话', '家庭住址']:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Excel 中学生信息不是指定格式'
+        }, status=400)
+    # 写入到数据库，因为第一行是标题行，所以从第二行开始写入数据库
+    for row in data[1:]:
+        # 解析数据
+        grade, student_name, student_number, gender, birthday, contact_number, address = row
+        # 检查班级是否存在
+        grade = Grade.objects.filter(grade_name=grade).first()
+        # 检查班级是否填写
+        if not grade:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'ddd{grade} 不存在'
+            }, status=400)
+        # 检测主要字段
+        if not student_name:
+            return JsonResponse({
+                'status': 'error',
+                'message': '学生姓名不能为空'
+            }, status=400)
+        if not student_number or len(student_number) != 8:
+            return JsonResponse({
+                'status': 'error',
+                'message': '学号不能为空，且长度必须为8位'
+            }, status=400)
+        # 检查日期格式
+        if not isinstance(birthday, datetime.datetime):
+            return JsonResponse({
+                'status': 'error',
+                'message': '出生日期格式错误'
+            }, status=400)
+        # 判断学生信息是否已经存在
+        if Student.objects.filter(student_number=student_number).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': f'学号 {student_name} 已经存在'
+            }, status=400)
+
+        # 写入到数据库中
+        try:
+            # 判断 auth_user 表中是否存在该用户,不存在时创建该用户
+            username = student_number
+            users = User.objects.filter(username=username)
+            if users.exists():
+                user = users.first()
+            else:
+                user = User.objects.create_user(username=username, password=make_password(username[-6:]))
+            # 在 student 表中写入数据
+            Student.objects.create(
+                grade=grade,
+                student_name=student_name,
+                student_number=student_number,
+                gender= 'M' if gender == '男' else 'F',
+                birthday=birthday,
+                contact_number=contact_number,
+                address=address,
+                user=user
+            )
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': '导入失败' + str(e)
+            }, status=500)
+    # 全部导入成功，返回成功信息
+    return JsonResponse({
+        'status': 'success',
+        'message': '导入成功'
+    }, status=200)
+

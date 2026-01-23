@@ -250,7 +250,7 @@
                 const formData = new FormData()
                 formData.append('excel_file', file)
 
-                return fetch('', {
+                return fetch("{% url 'import_student' %}", {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': "{{ csrf_token }}"
@@ -260,12 +260,11 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'error') {
-                            throw new Error(data.messages); // 直接抛出错误，让 catch 块处理
+                            throw new Error(data.message); // 直接抛出错误，让 catch 块处理
                         }
                     })
                     .catch(error => {
-                        // close.log(error);
-                        Swal.showValidationMessage(`${error.messages || error}`)
+                        Swal.showValidationMessage(`${ error.message || error }`)
                     })
             },
             allowOutsideClick: () => !Swal.isLoading()

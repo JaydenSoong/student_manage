@@ -1,4 +1,9 @@
 import datetime
+import json
+from pathlib import Path
+from io import BytesIO
+
+from django.http import JsonResponse, HttpResponse
 from pathlib import Path
 
 from django.http import JsonResponse
@@ -12,6 +17,7 @@ from .models import Student
 from .forms import StudentForm
 from grades.models import Grade
 from utils.handle_excel import ReadExcel
+import openpyxl
 
 # Create your views here.
 class StudentListView(ListView):
@@ -19,6 +25,15 @@ class StudentListView(ListView):
     template_name = 'students/list.html'
     context_object_name = 'students'
     paginate_by = 9
+
+    # 默认的 context 返回的 student 对象，由于我们还要在页面中使用 grade 对象，所以可以重写 get_context_data 方法
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 获取所有班级并添加到上下文对象
+        context['grades'] = Grade.objects.all().order_by('grade_number')
+        # 判断当前选中的班级，并添加到上下文对象中
+        context['current_grade'] = self.request.GET.get('grade', '')
+        return context
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -250,3 +265,57 @@ def import_student(request):
         'message': '导入成功'
     }, status=200)
 
+"""
+定义导出学生信息到 excel 文件的方法
+"""
+def export_student(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        grade_id = data.get('grade')
+        # 判断 grade_id 是否为空
+        if not grade_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': '班级参数缺失'
+            }, status=400)
+        # 判断班级是否存在
+        try:
+            grade = Grade.objects.get(id=grade_id)
+        except Grade.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': '班级不存在'
+            }, status=404)
+        # 从数据库中查询学生数据
+        students = Student.objects.filter(grade=grade)
+        if not students.exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': '没有该班级的学生信息'
+            }, status=404)
+
+        # 操作 excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        # 添加标题行
+        ws.append(['班级', '姓名', '学号', '性别', '出生日期', '联系电话', '家庭住址'])
+        for student in students:
+            ws.append([
+                student.grade.grade_name,
+                student.student_name,
+                student.student_number,
+                '男' if student.gender == 'M' else '女',
+                student.birthday,
+                student.contact_number,
+                student.address
+            ])
+        # 将 excel 数据保存到内存中
+        output = BytesIO()
+        wb.save(output)
+        wb.close()
+        # 重置文件指针(游标)
+        output.seek(0)
+        # 设置响应
+        response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="students.xlsx"'
+        return response

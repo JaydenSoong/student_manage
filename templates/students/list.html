@@ -304,7 +304,7 @@
             confirmButtonText: '确认'
         }).then(result => {
             if(result.isConfirmed) {
-                fetch('', {
+                fetch('{% url "export_student" %}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -317,7 +317,7 @@
                         response.json().then(result => {
                             Swal.fire({
                                 title: '下载失败',
-                                text: '服务器错误： ' + result.messages,
+                                text: '服务器错误： ' + result.message,
                                 icon: 'error',
                                 confirmButtonText: '关闭'
                             })

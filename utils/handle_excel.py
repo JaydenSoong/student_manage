@@ -44,19 +44,3 @@ class WriteExcel:
             self.worksheet.append(row)
 
         self.workbook.save(self.file_path)
-
-
-print('__name__', __name__)
-
-if __name__ == '__main__':
-    # 准备数据
-    data = [
-        ['学号', '姓名', '性别', '年龄', '班级'],
-        [1001, '小王', '男', 18, '5班'],
-        [1002, '小张', '女', 17, '5班'],
-        [1003, '小李', '男', 16, '5班'],
-        [1004, '小赵', '女', 15, '5班'],
-        [1005, '小孙', '男', 14, '5班'],
-    ]
-    write_excel = WriteExcel('/home/jayden/Documents/5年级1班2026.xlsx', data)
-    write_excel.write_data()

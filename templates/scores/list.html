@@ -1,0 +1,358 @@
+{%extends 'base.html' %}
+{% load custom_filters %}
+{% load url_utils %}
+
+{% block content %}
+<div class="right col-9">
+    <div class="search shadow p-3 mb-5 bg-body-tertiary rounded">
+        <form method="get" action="/students/">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <label for="searchClass" class="col-form-label">班级：</label>
+                </div>
+                <div class="col-auto">
+                    <select name="grade" class="form-control" id="searchClass">
+                        <option value="" selected="">请选择班级</option>
+                        {% for grade in grades %}
+                        <option value="{{ grade.pk }}" {% if grade.pk|stringformat:"s" == current_grade %} selected {% endif %}>{{ grade.grade_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="search" class="col-form-label">姓名/学号:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="text" name="search" class="form-control form-control-sm" id="search"
+                        placeholder="搜索姓名学号">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm">搜索</button>
+                </div>
+                <div class="col-auto">|</div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-success btn-sm" id="add">新增</button>
+                    &nbsp;
+                    <button type="button" class="btn btn-danger btn-sm" id="del-all">批量删除</button>
+                    &nbsp;
+                    <button type="button" class="btn btn-info btn-sm" id="import">导入</button>
+                    &nbsp;
+                    <!-- <a href="{% url 'grade_create' %}"> -->
+                    <button type="button" class="btn btn-warning btn-sm" id="export">导出</button>
+                    <!-- </a> -->
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="list shadow p-3 mb-5 bg-body-tertiary rounded">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="check_col" scope="col"> <input class="form-check-input" type="checkbox" value=""
+                            id="select-all"></th>
+                    <th scope="col">序号</th>
+                    <th scope="col">考试名称</th>
+                    <th scope="col">姓名</th>
+                    <th scope="col">班级</th>
+                    <th scope="col">学号</th>
+                    <th scope="col">语文</th>
+                    <th scope="col">数学</th>
+                    <th scope="col">英语</th>
+                    <th scope="col">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for score in scores %}
+                <tr>
+                    <td><input class="form-check-input" type="checkbox" value="{{ student.pk }}" name="student_ids">
+                    </td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ score.title }}</td>
+                    <td>{{ score.student.name }}</td>
+                    <td>{{ score.grade }}</td>
+                    <td>{{ score.student_number }}</td>
+                    <td>{{ score.chinese_score }}</td>
+                    <td>{{ score.math_score }}</td>
+                    <td>{{ score.english_score }}</td>
+                    <td>
+                        <a href="{% url 'student_update' student.id %}" class="link-success edit">编辑</a>
+                        <a href="{% url 'student_delete' student.id %}" class="link-warning del">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-end">
+                <li class="page-item"><a href="?{% search_url request page=1 %}" class="page-link">首页</a></li>
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.previous_page_number %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.number|add:-1 %}">{{ page_obj.number|add:-1 }}</a>
+                </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link active" href="?{% search_url request page=page_obj.number %}">{{ page_obj.number }}</a>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.number|add:1 %}">{{ page_obj.number|add:1 }}</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.next_page_number %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                <!-- <li class="page-item"><a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">尾页</a></li> -->
+                <li class="page-item"><a href="?{% search_url request page=page_obj.paginator.num_pages %}" class="page-link">尾页</a></li>
+                <li class="page-item">&nbsp;共 {{page_obj.paginator.num_pages }} 页</li>
+            </ul>
+        </nav>
+    </div>
+
+</div>
+
+{% block scripts %}
+<script>
+    // 全选
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取全选复选框
+        const selectAllCheckbox = document.getElementById('select-all')
+        // 监听全选复选框点击事件
+        selectAllCheckbox.addEventListener('change', () => {
+            // 获取所有 name 为 'student_ids' 的复选框
+            const studentCheckboxes = document.querySelectorAll('input[name="student_ids"]')
+            // 根据全选复选框的状态设置每个学生复选框的状态
+            studentCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked
+            })
+        })
+    })
+    // 点击新增
+    document.getElementById('add').addEventListener('click', () => {
+        Swal.fire({
+            position: "top-end",
+            html: `<iframe src="{% url 'score_create' %}" width="100%" height="800px" frameborder="0"></iframe>`,
+            width: 600,
+            showConfirmButton: false
+        })
+    })
+    // 点击编辑
+    document.querySelectorAll('.edit').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // 阻止跳转
+            url = this.getAttribute('href')
+            Swal.fire({
+                position: "top-end",
+                html: `<iframe src="${url}" width="100%" height="800px" frameborder="0"></iframe>`,
+                width: 600,
+                showConfirmButton: false
+            })
+        })
+    })
+    // 点击删除
+    document.querySelectorAll('.del').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // 阻止跳转
+            url = this.getAttribute('href')
+            Swal.fire({
+                title: '确认删除？',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '删除',
+                confirmButtonColor: '#d33'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // 向后台发送数据
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => response.json()).then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire('Deleted!', data.message, 'success')
+                            window.location.reload()
+                        }
+                        Swal.fire('Error!', data.message, 'error')
+                    })
+                }
+            })
+        })
+    })
+    // 批量删除
+    document.getElementById('del-all').addEventListener('click', () => {
+        // 是否有学生被选择
+        const checkboxes = document.querySelectorAll('input[name="student_ids"]:checked')
+        if (checkboxes.length === 0) {
+            Swal.fire({
+                title: '错误',
+                text: '请先选择要删除的学生信息',
+                icon: 'error',
+                confirmButtonText: '好的'
+            })
+            return;
+        }
+        // 如果有学生被选中，则 fetch 发送
+        Swal.fire({
+            title: "确认删除选中的数据？",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '删除',
+            confirmButtonColor: '#d33'
+
+        })
+            .then(result => {
+                if (result.isConfirmed) {
+                    // 创建一个表单对象
+                    const formData = new FormData()
+                    // 遍历所有选择的数据
+                    checkboxes.forEach(checkbox => {
+                        formData.append('student_ids', checkbox.value)
+                    })
+                    fetch("{% url 'student_bulk_delete' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire('Deleted!', data.message, 'success')
+                                window.location.reload()
+                            }
+                            Swal.fire('Error!', data.message, 'error')
+                        })
+                }
+            })
+    })
+    // 批量导入学生信息
+    document.getElementById('import').addEventListener('click', () => {
+        Swal.fire({
+            title: '上传学生信息 Excel',
+            input: 'file',
+            inputAttributes: {
+                'accept': '.xlsx',
+                'aria-label': 'Upload your excel file'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Upload',
+            showLoaderOnConfirm: true,
+            preConfirm: file => {
+                // 处理上传的逻辑，例如使用 FormData 和 fetch API 上传
+                const formData = new FormData()
+                formData.append('excel_file', file)
+
+                return fetch("{% url 'import_student' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'error') {
+                            throw new Error(data.message); // 直接抛出错误，让 catch 块处理
+                        }
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`${ error.message || error }`)
+                    })
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then(result => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Uploaded!',
+                    text: '上传成功'
+                })
+                window.location.reload();
+            }
+        })
+    })
+    // 导出学生信息
+    document.getElementById('export').addEventListener('click', () => {
+        // 检查是否选择了班级
+        var select = document.querySelector('select[name="grade"]')
+        var value = select.value
+        var gradeText = select.options[select.selectedIndex].text
+        // console.log(value)
+        if(!value) {
+            Swal.fire({
+                title: '错误！',
+                text: '请选择一个班级',
+                icon: 'error',
+                confirmButtonText: '确定'
+            })
+            return ;
+        }
+        // 提交请求
+        Swal.fire({
+            title: '确认',
+            text: '导出【' + gradeText + '】学生信息',
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonText: '取消',
+            confirmButtonText: '确认'
+        }).then(result => {
+            if(result.isConfirmed) {
+                fetch('{% url "export_student" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ grade: value })
+                })
+                .then(response=>{
+                    if(!response.ok) {
+                        response.json().then(result => {
+                            Swal.fire({
+                                title: '下载失败',
+                                text: '服务器错误： ' + result.message,
+                                icon: 'error',
+                                confirmButtonText: '关闭'
+                            })
+                        })
+                        throw new Error('网络或服务器错误')
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = gradeText + '.xlsx'
+                    document.body.appendChild(a)
+                    a.click()
+                    // 清理并移除元素
+                    document.body.removeChild(a)
+                    window.URL.revokeObjectURL(url)
+                })
+                .catch(error => {
+                    console.error('下载失败', error)
+                    Swal.fire({
+                        title: '错误',
+                        text: '下载出现问题，请稍后再试',
+                        icon: 'error',
+                        confirmButtonText: '关闭'
+                    })
+                })
+            }
+        })
+    })
+</script>
+{% endblock %}
+
+{% endblock%}

@@ -26,6 +26,21 @@ class StudentListView(ListView):
     context_object_name = 'students'
     paginate_by = 9
 
+    # 重写get_queryset 方法，添加搜索功能
+    def get_queryset(self):
+        # 使用父类的方法，获取所有学生
+        queryset = super().get_queryset()
+        grade_id = self.request.GET.get('grade')
+        keywords = self.request.GET.get('search')
+
+        if grade_id:
+            queryset = queryset.filter(grade__pk=grade_id)
+        if keywords:
+            queryset = queryset.filter(
+                Q(student_number=keywords) |
+                Q(student_name=keywords)
+            )
+        return queryset
     # 默认的 context 返回的 student 对象，由于我们还要在页面中使用 grade 对象，所以可以重写 get_context_data 方法
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -34,18 +49,6 @@ class StudentListView(ListView):
         # 判断当前选中的班级，并添加到上下文对象中
         context['current_grade'] = self.request.GET.get('grade', '')
         return context
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search = self.request.GET.get('search')
-
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(sex__icontains=search) |
-                Q(birthday__icontains=search)
-            )
-        return queryset
 
 class StudentCreateView(CreateView):
     model = Student

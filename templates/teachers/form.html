@@ -1,0 +1,114 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/student-form.css' %}">
+<link rel="stylesheet" href="{% static 'css/sweetalert2.min.css' %}">
+<div class="container form_container">
+    <h1>
+        {% if teacher.pk %}
+        编辑教师信息
+        {% else %}
+        添加教师信息
+        {% endif %}
+    </h1>
+    <form>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="row">
+            <label for="{{ field.id_for_label }}" class="col-sm-2 col-form-label">{{ field.label }}</label>
+            <div class="col-sm-10">
+                {{ field }}
+            </div>
+            {% if field.help_text %}
+                {{ field.help_text }}
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="position-relative buttons">
+            <div class="position-absolute top-50 start-50">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-secondary" onclick="window.parent.Swal.close()">取消</button>
+            </div>
+        </div>
+
+    </form>
+</div>
+{% block scripts %}
+<script src="{% static 'js/sweetalert2.all.min.js'%}"></script>
+<script>
+    const inputEles = document.getElementsByClassName('col-sm-10')
+    for (let i = 0; i < inputEles.length; i++) {
+        inputEles[4].classList.add('with-help')
+        inputEles[i].firstElementChild.classList.add('form-control')
+    }
+</script>
+{% if teacher.pk %}
+    <script>
+        var actionUrl = "{% url 'teacher_update' teacher.pk %}"
+    </script>
+{% else %}
+    <script>
+        var actionUrl = "{% url 'teacher_create' %}"
+    </script>
+{% endif%}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', e => {
+            // 阻止表单默认提交
+            e.preventDefault()
+            let formData = new FormData(form)
+            // console.log(actionUrl)
+            // 使用 JS 的 fetch 发送请求
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: data.message,
+                            text: '数据已成功提交'
+                        }).then(result => {
+                            if (result.value) {
+                                // 刷新父页面
+                                window.parent.location.reload()
+                            }
+                        })
+                    } else {
+                        // 解析嵌套的 JSON 字符串
+                        const errors = JSON.parse(data.message)
+                        // 构造错误信息的文本
+                        let errorMessage = '<ul>';
+                        for (const field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                errors[field].forEach(error => {
+                                    errorMessage += `<li style="color:red;text-align:left;margin-left:100px;">${error.message}</li>`
+                                });
+                            }
+                        }
+                        errorMessage += '</ul>'
+                        Swal.fire({
+                            icon: 'error',
+                            title: '提交错误',
+                            html: errorMessage,
+                            confirmButtonText: '关闭'
+                        })
+                    }
+                }).catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '网络请求失败',
+                        text: '无法连接到服务器，请稍后再试',
+                        confirmButtonText: '关闭'
+                    })
+                })
+        })
+    })
+</script>
+{% endblock %}

@@ -33,6 +33,20 @@ class ScoreForm(forms.ModelForm):
             raise ValidationError('该学号不存在')
         return student_number
 
+    # 验证学生学号班级是否能匹配
+    def clean(self):
+        cleaned_data = super().clean()
+        student_name = cleaned_data.get('student_name')
+        student_number = cleaned_data.get('student_number')
+        grade = cleaned_data.get('grade')
+        if student_name and student_number and grade:
+            try:
+                student = Student.objects.get(student_name=student_name, student_number=student_number, grade=grade)
+                cleaned_data['student'] = student
+            except Student.DoesNotExist:
+                raise ValidationError('该学生信息不存在')
+        return cleaned_data
+
 
     class Meta:
         model = Score

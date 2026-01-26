@@ -68,15 +68,15 @@
                     </td>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ score.title }}</td>
-                    <td>{{ score.student.name }}</td>
+                    <td>{{ score.student_name }}</td>
                     <td>{{ score.grade }}</td>
                     <td>{{ score.student_number }}</td>
                     <td>{{ score.chinese_score }}</td>
                     <td>{{ score.math_score }}</td>
                     <td>{{ score.english_score }}</td>
                     <td>
-                        <a href="{% url 'student_update' student.id %}" class="link-success edit">编辑</a>
-                        <a href="{% url 'student_delete' student.id %}" class="link-warning del">删除</a>
+                        <a href="{% url 'score_update' score.id %}" class="link-success edit">编辑</a>
+                        <a href="{% url 'score_delete' score.id %}" class="link-warning del">删除</a>
                     </td>
                 </tr>
                 {% endfor %}

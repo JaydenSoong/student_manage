@@ -18,6 +18,7 @@ class ScoreBasicView:
 class ScoreListView(ScoreBasicView, ListView):
     template_name = 'scores/list.html'
     paginate_by = 9
+    context_object_name = 'scores'
 
     # 重写get_queryset 方法，添加搜索功能
     def get_queryset(self):
@@ -55,23 +56,7 @@ class ScoreCreateView(CreateView):
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
-        # 从表单中获取用户信息
-        student_name = form.cleaned_data['student_name']
-        student_number = form.cleaned_data['student_number']
-        grade_id = form.cleaned_data['grade']
-
-        # 查询学生表
-        try:
-            student = Student.objects.get(student_name=student_name, student_number=student_number, grade=grade_id)
-        except Student.DoesNotExist:
-            errors = {'general': [{'message': '学生信息不存在', 'code': 'not_found'}]}
-            return JsonResponse({
-                'status': 'error',
-                'message': errors
-            }, status=404)
-
-        # 保存 form 实例
-        form.save()
+        self.object = form.save()
         return JsonResponse({
             'status': 'success',
             'message': '添加成功'

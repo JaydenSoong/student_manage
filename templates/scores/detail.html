@@ -1,0 +1,33 @@
+{%extends 'base.html' %}
+
+{% block content %}
+<div class="right col-9">
+    <div class="list shadow p-3 mb-5 bg-body-tertiary rounded" style="height: 580px; position: relative;">
+        <h2>{{ score.title }}</h2>
+        <table class="table table-bordered position-absolute top-50 start-50 translate-middle" style="width: 40%;" >
+                <tr>
+                    <th scope="row" width="100px">姓名</th><td>{{ score.student_name }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">学号</th><td>{{ score.student_number }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">班级</th><td>{{ score.grade.grade_name }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">语文成绩</th><td>{{ score.chinese_score }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">数学成绩</th><td>{{ score.math_score }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">英语成绩</th><td>{{ score.english_score }}</td>
+                </tr>
+                <tr></tr>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock%}

@@ -38,9 +38,9 @@
         inputEles[i].firstElementChild.classList.add('form-control')
     }
 </script>
-{% if student.pk %}
+{% if score.pk %}
     <script>
-        var actionUrl = "{% url 'score_update' student.pk %}"
+        var actionUrl = "{% url 'score_update' score.pk %}"
     </script>
 {% else %}
     <script>

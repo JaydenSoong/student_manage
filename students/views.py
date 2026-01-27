@@ -1,6 +1,5 @@
 import datetime
 import json
-from pathlib import Path
 from io import BytesIO
 
 from django.http import JsonResponse, HttpResponse

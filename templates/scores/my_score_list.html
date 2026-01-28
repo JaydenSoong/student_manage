@@ -1,0 +1,148 @@
+{%extends 'base.html' %}
+{% load custom_filters %}
+{% load url_utils %}
+
+{% block content %}
+<div class="right col-9">
+
+    <div class="list shadow p-3 mb-5 bg-body-tertiary rounded">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="check_col" scope="col"> <input class="form-check-input" type="checkbox" value=""
+                            id="select-all"></th>
+                    <th scope="col">序号</th>
+                    <th scope="col">考试名称</th>
+                    <th scope="col">姓名</th>
+                    <th scope="col">班级</th>
+                    <th scope="col">学号</th>
+                    <th scope="col">语文</th>
+                    <th scope="col">数学</th>
+                    <th scope="col">英语</th>
+                    <th scope="col">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                 <h2>{{ request.user.student.student_name }} 成绩列表</h2>
+                <br>
+                 {% for score in scores %}
+                <tr>
+                    <td><input class="form-check-input" type="checkbox" value="{{ score.pk }}" name="score_ids">
+                    </td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ score.title }}</td>
+                    <td>{{ score.student_name }}</td>
+                    <td>{{ score.grade }}</td>
+                    <td>{{ score.student_number }}</td>
+                    <td>{{ score.chinese_score }}</td>
+                    <td>{{ score.math_score }}</td>
+                    <td>{{ score.english_score }}</td>
+                    <td>
+                        <a href="{% url 'score_detail' score.pk %}" class="link-info info">查看</a>
+                        <a href="{% url 'score_update' score.pk %}" class="link-success edit">编辑</a>
+                        <a href="{% url 'score_delete' score.pk %}" class="link-warning del">删除</a>
+                    </td>
+                </tr>
+                <!-- {% endfor %} -->
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-end">
+                <li class="page-item"><a href="?{% search_url request page=1 %}" class="page-link">首页</a></li>
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.previous_page_number %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.number|add:-1 %}">{{ page_obj.number|add:-1 }}</a>
+                </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link active" href="?{% search_url request page=page_obj.number %}">{{ page_obj.number }}</a>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.number|add:1 %}">{{ page_obj.number|add:1 }}</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% search_url request page=page_obj.next_page_number %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="page-item"><a href="?{% search_url request page=page_obj.paginator.num_pages %}" class="page-link">尾页</a></li>
+                <li class="page-item">&nbsp;共 {{page_obj.paginator.num_pages }} 页</li>
+            </ul>
+        </nav>
+    </div>
+
+</div>
+
+{% block scripts %}
+<script>
+    // 全选
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取全选复选框
+        const selectAllCheckbox = document.getElementById('select-all')
+        // 监听全选复选框点击事件
+        selectAllCheckbox.addEventListener('change', () => {
+            // 获取所有 name 为 'score_ids' 的复选框
+            const scoreCheckboxes = document.querySelectorAll('input[name="score_ids"]')
+            // 根据全选复选框的状态设置每个学生复选框的状态
+            scoreCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked
+            })
+        })
+    })
+
+    // 点击编辑
+    document.querySelectorAll('.edit').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // 阻止跳转
+            url = this.getAttribute('href')
+            Swal.fire({
+                position: "top-end",
+                html: `<iframe src="${url}" width="100%" height="800px" frameborder="0"></iframe>`,
+                width: 600,
+                showConfirmButton: false
+            })
+        })
+    })
+    // 点击删除
+    document.querySelectorAll('.del').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // 阻止跳转
+            url = this.getAttribute('href')
+            Swal.fire({
+                title: '确认删除？',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '删除',
+                confirmButtonColor: '#d33'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // 向后台发送数据
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => response.json()).then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire('Deleted!', data.messages, 'success')
+                            window.location.reload()
+                        }
+                        Swal.fire('Error!', data.messages, 'error')
+                    })
+                }
+            })
+        })
+    })
+
+</script>
+{% endblock %}
+
+{% endblock%}

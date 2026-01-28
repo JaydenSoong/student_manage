@@ -12,5 +12,5 @@ urlpatterns = [
     path('<int:pk>/detail', ScoreDetailView.as_view(), name='score_detail'),
     path('export/', score_export, name='score_export'),
     path('import/', score_import, name='score_import'),
-    path('my_score/', MyScoreListView.as_view(), name='my_score_list'),
+    path('my_score/', MyScoreListView.as_view(), name='my_score'),
  ]

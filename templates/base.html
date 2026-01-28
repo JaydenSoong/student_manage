@@ -40,6 +40,7 @@
                     </div>
                     <div class="menu">
                         <ul>
+                            {% if request.session.user_role == 'admin' %}
                             <li>
                                 <i class="bi bi-person-video2"></i>
                                 <a href="{% url 'grade_list' %}">班级管理</a>
@@ -48,21 +49,31 @@
                                 <i class="bi bi-incognito"></i>
                                 <a href="{% url 'teacher_list' %}">老师管理</a>
                             </li>
+                            {% endif %}
+                            {% if request.session.user_role == 'teacher' or request.session.user_role == 'admin'%}
                             <li>
+
                                 <i class="bi bi-people"></i>
                                 <a href="{% url 'student_list' %}">学生管理</a>
                             </li>
                             <li>
                                 <i class="bi bi-pass"></i>
-                                <a href="">成绩管理</a>
+                                <a href="{% url 'score_list' %}">成绩管理</a>
                             </li>
+                            {% endif %}
+                            {% if request.session.user_role == 'student' %}
+                                 <li>
+                                    <i class="bi bi-pass"></i>
+                                    <a href="{% url 'my_score' %}">我的成绩</a>
+                                 </li>
+                            {% endif %}
                             <li>
                                 <i class="bi bi-pencil-square"></i>
-                                <a href="">修改密码</a>
+                                <a href="{% url 'change_password' %}">修改密码</a>
                             </li>
                             <li>
                                 <i class="bi bi-arrow-up-right-circle"></i>
-                                <a href="">退出登录</a>
+                                <a href="{% url 'user_logout' %}">退出登录</a>
                             </li>
                         </ul>
                     </div>

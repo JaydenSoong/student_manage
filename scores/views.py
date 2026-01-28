@@ -6,9 +6,9 @@ from io import BytesIO
 from django.views.generic import ListView, UpdateView, CreateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponse
-from django.contrib.auth.models import User
 from django.db.models import Q
 
+from utils.premissions import RoleRequiredMixin, role_required
 from .models import Score
 from .forms import ScoreForm
 from grades.models import Grade
@@ -16,14 +16,19 @@ from students.models import Student
 from utils.handle_excel import ReadExcel
 
 # Create your views here.
-class ScoreBasicView:
+class ScoreBasicView(RoleRequiredMixin):
     model = Score
+    form_class = ScoreForm
+    template_name = 'scores/form.html'
+    success_url = reverse_lazy('score-list')
     reverse_lazy('score-list')
+    allowed_roles = ['teacher', 'admin']
+    context_object_name = 'scores'
 
 class ScoreListView(ScoreBasicView, ListView):
     template_name = 'scores/list.html'
     paginate_by = 9
-    context_object_name = 'scores'
+    ordering = ['-id']
 
     # 重写get_queryset 方法，添加搜索功能
     def get_queryset(self):
@@ -50,8 +55,6 @@ class ScoreListView(ScoreBasicView, ListView):
         return context
 
 class ScoreUpdateView(ScoreBasicView, UpdateView):
-    template_name = 'scores/form.html'
-    form_class = ScoreForm
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
@@ -74,9 +77,7 @@ class ScoreUpdateView(ScoreBasicView, UpdateView):
             'message': errors
         }, status=400)
 
-class ScoreCreateView(CreateView):
-    template_name = 'scores/form.html'
-    form_class = ScoreForm
+class ScoreCreateView(ScoreBasicView, CreateView):
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
@@ -136,9 +137,11 @@ class ScoreDeleteMultipleView(ScoreBasicView, DeleteView):
                 'message': '删除失败' + str(e)
             }, status=500)
 
-class ScoreDetailView(ScoreBasicView, DetailView):
+class ScoreDetailView(DetailView):
+    model =  Score
     template_name = 'scores/detail.html'
 
+@role_required('teacher', 'admin')
 def score_export(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -192,6 +195,7 @@ def score_export(request):
         return response
 
 
+@role_required('admin', 'teacher')
 def score_import(request):
     # 导入成绩的功能使用POST请求
     if request.method == 'POST':
@@ -271,5 +275,12 @@ def score_import(request):
 
 
 class MyScoreListView(ListView):
-    model = Score
     template_name = 'scores/my_score_list.html'
+    context_object_name = 'scores'
+    paginate_by = 5
+    ordering = ['-id']
+
+    def get_queryset(self):
+        # 仅返回当前登录用户的数据
+        student_number = self.request.user.username
+        return Score.objects.filter(student_number=student_number)

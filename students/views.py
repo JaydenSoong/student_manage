@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
+from utils.premissions import RoleRequiredMixin, role_required
 from .models import Student
 from .forms import StudentForm
 from grades.models import Grade
@@ -19,11 +20,21 @@ from utils.handle_excel import ReadExcel
 import openpyxl
 
 # Create your views here.
-class StudentListView(ListView):
+class StudentBaseView(RoleRequiredMixin):
+    """
+    学生管理基类
+    """
     model = Student
-    template_name = 'students/list.html'
+    template_name = 'students/form.html'
+    form_class = StudentForm
     context_object_name = 'students'
+    success_url = reverse_lazy('student_list')
+    allowed_roles = ['teacher', 'admin']
+
+class StudentListView(StudentBaseView, ListView):
+    template_name = 'students/list.html'
     paginate_by = 9
+    ordering = ['-student_number']
 
     # 重写get_queryset 方法，添加搜索功能
     def get_queryset(self):
@@ -49,11 +60,7 @@ class StudentListView(ListView):
         context['current_grade'] = self.request.GET.get('grade', '')
         return context
 
-class StudentCreateView(CreateView):
-    model = Student
-    template_name = 'students/form.html'
-    form_class = StudentForm
-    success_url = reverse_lazy('student_list')
+class StudentCreateView(StudentBaseView, CreateView):
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
@@ -65,7 +72,7 @@ class StudentCreateView(CreateView):
         if users.exists():
             user = users.first()
         else:
-            # 如果不存在该用户，则创建该用户
+            # 如果不存在该用户，则创建该用户,注意，密码是不能再使用 make_password 方法加密，因为User.objects.create_user 方法会自动对密码进行加密
             user = User.objects.create_user(username=student_number, password=student_number[-6:])
         # 写入到student表中
         form.instance.user = user
@@ -85,11 +92,7 @@ class StudentCreateView(CreateView):
             'message': errors
         }, status=400)
 
-class StudentUpdateView(UpdateView):
-    model = Student
-    template_name = 'students/form.html'
-    form_class = StudentForm
-    # success_url = reverse_lazy('student_list')
+class StudentUpdateView(StudentBaseView, UpdateView):
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
@@ -120,9 +123,7 @@ class StudentUpdateView(UpdateView):
             'message': errors
         }, status=400)
 
-class StudentDeleteView(UpdateView):
-    success_url = reverse_lazy('student_list')
-    model =  Student
+class StudentDeleteView(StudentBaseView, UpdateView):
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -141,9 +142,7 @@ class StudentDeleteView(UpdateView):
                 'message': '删除失败' + str(e)
             }, status=500)
 
-class StudentBulkDeleteView(DeleteView):
-    model =  Student
-    success_url = reverse_lazy('student_list')
+class StudentBulkDeleteView(StudentBaseView, DeleteView):
 
     def post(self, request, *args, **kwargs):
         student_ids = request.POST.getlist('student_ids')
@@ -173,6 +172,7 @@ class StudentBulkDeleteView(DeleteView):
 """
 定义一个方法完成批量导入学生信息的功能
 """
+@role_required('admin', 'teacher')
 def import_student(request):
     # 导入学生的功能使用POST请求
     if request.method == 'POST':
@@ -243,7 +243,8 @@ def import_student(request):
             if users.exists():
                 user = users.first()
             else:
-                user = User.objects.create_user(username=username, password=make_password(username[-6:]))
+                # 同样的，这里也不能使用 make_password, 因为 make_password 会对密码进行加密
+                user = User.objects.create_user(username=username, password=username[-6:])
             # 在 student 表中写入数据
             Student.objects.create(
                 grade=grade,
@@ -270,6 +271,7 @@ def import_student(request):
 """
 定义导出学生信息到 excel 文件的方法
 """
+@role_required('admin', 'teacher')
 def export_student(request):
     if request.method == 'POST':
         data = json.loads(request.body)

@@ -2,23 +2,36 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.urls import reverse_lazy
+
+from utils.premissions import RoleRequiredMixin
 # 导入ListView使用时所需要提供的模型
 from .models import Grade
 from .forms import GradeForm
 
 # Create your views here.
-class GradeListView(ListView):
-    # 指定模型
+class GradeBaseView(RoleRequiredMixin):
+    """
+    定义一个基类，继承自 object
+    """
+    # 模型
     model = Grade
+    # 模板
+    template_name = 'grades/form.html'
+    # 表单
+    form_class = GradeForm
+    # 重定向
+    success_url = reverse_lazy('grade_list')
+    # 返回的数据
+    context_object_name = 'grades'
+    allowed_roles = ['admin',]
+
+class GradeListView(GradeBaseView, ListView):
     # 指定模板
     template_name = 'grades/list.html'
     # 显示字段
     fields = ['grade_name', 'grade_number']
-    # 返回的数据
-    context_object_name = 'grades'
-
     # 定义每页显示的数据条数
-    paginate_by = 9
+    paginate_by = 10
 
     # 重写父类方法
     def get_queryset(self):
@@ -37,20 +50,11 @@ class GradeListView(ListView):
         # 如果存在参数，则进行过滤，否则返回所有数据（父类方法）
         return queryset
 
-class GradeCreateView(CreateView):
-    model =  Grade
-    template_name = 'grades/form.html'
-    form_class = GradeForm
-    # 注意这里使用 reverse_lazy 或 reverse 函数，而不是直接使用字符串
-    success_url = reverse_lazy('grade_list')
+class GradeCreateView(GradeBaseView, CreateView):
+    pass
 
-class GradeUpdateView(UpdateView):
-    model =  Grade
-    template_name = 'grades/form.html'
-    form_class = GradeForm
-    success_url = reverse_lazy('grade_list')
+class GradeUpdateView(GradeBaseView, UpdateView):
+    pass
 
-class GradeDeleteView(DeleteView):
-    model = Grade
+class GradeDeleteView(GradeBaseView, DeleteView):
     template_name = 'grades/delete_confirm.html'
-    success_url = reverse_lazy('grade_list')

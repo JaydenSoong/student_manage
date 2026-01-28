@@ -145,3 +145,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # CKEDITOR_UPLOAD_PATH = 'uploads/'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# 登录页面URL
+LOGIN_URL = '/login/'

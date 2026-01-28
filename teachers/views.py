@@ -5,17 +5,21 @@ from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 
+from utils.premissions import RoleRequiredMixin
 from .models import Teacher
 from .forms import TeacherForm
 from grades.models import Grade
 
 # Create your views here.
-class TeacherBaseView:
+class TeacherBaseView(RoleRequiredMixin):
     model = Teacher
     success_url = reverse_lazy('teacher_list')
+    context_object_name = 'teachers'
+    template_name = 'teachers/form.html'
+    form_class = TeacherForm
+    allowed_roles = ['admin',]
 
 class TeacherListView(TeacherBaseView, ListView):
-    context_object_name = 'teachers'
     template_name = 'teachers/list.html'
     paginate_by = 9
 
@@ -44,8 +48,6 @@ class TeacherListView(TeacherBaseView, ListView):
         return context
 
 class TeacherCreateView(TeacherBaseView, CreateView):
-    form_class = TeacherForm
-    template_name = 'teachers/form.html'
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
@@ -78,8 +80,6 @@ class TeacherCreateView(TeacherBaseView, CreateView):
         }, status=400)
 
 class TeacherUpdateView(TeacherBaseView, UpdateView):
-    template_name = 'teachers/form.html'
-    form_class = TeacherForm
 
     # 表单验证成功后的处理逻辑
     def form_valid(self, form):
